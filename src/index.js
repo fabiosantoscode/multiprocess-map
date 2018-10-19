@@ -26,12 +26,9 @@ const multiprocessMap = async (values, fn, max = os.cpus().length) => {
         ? fork(runner, [], { stdio: ['ipc'] })
         : spawn('node', [runner], { stdio: ['pipe', 'pipe', 'ipc'] })
 
-      assert.strictEqual(
-        await new Promise(resolve => {
-          cp.once('message', resolve)
-        }),
-        null
-      )
+      await new Promise(resolve => {
+        cp.once('message', resolve)
+      })
 
       try { file.cleanupSync() } catch (_) {}
 

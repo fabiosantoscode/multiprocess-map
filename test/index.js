@@ -1,6 +1,6 @@
 'use strict'
 
-var assert = require('assert')
+var assert = require('assert').strict || require('assert')
 var Mocha = require('mocha')
 var map = require('..')
 
