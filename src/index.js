@@ -1,7 +1,6 @@
 'use strict'
 
 require('babel-polyfill')
-const assert = require('assert')
 const os = require('os')
 const { spawn, fork } = require('child_process')
 const semver = require('semver')
@@ -15,7 +14,7 @@ const multiprocessMap = async (values, fn, max = os.cpus().length) => {
       file.write(
         'process.on("message", function (value) {\n' +
         '  Promise.resolve((' + fn + ')(value)).then(function (retVal) {\n' +
-        '    process.send(retVal)\n' +
+        '    process.send(JSON.stringify(retVal))\n' +
         '  })\n' +
         '})\n' +
         'process.send(null)'
@@ -47,9 +46,9 @@ const multiprocessMap = async (values, fn, max = os.cpus().length) => {
       cp.send(value)
     })
 
-    const retVal = await new Promise(resolve => {
+    const retVal = JSON.parse(await new Promise(resolve => {
       cp.once('message', resolve)
-    })
+    }))
 
     pool.release(cp)
 

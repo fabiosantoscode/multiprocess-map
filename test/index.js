@@ -8,7 +8,6 @@ Mocha.describe('multiprocess-map', function () {
   this.timeout(10 * 1000)
   after(function () {
     setTimeout(function () {
-      process.exit(0)
     })
   })
   Mocha.it('runs sync map functions', function () {
