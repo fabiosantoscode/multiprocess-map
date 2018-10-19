@@ -1,0 +1,11 @@
+{
+  "extends": "standard",
+  "plugins": ["standard"],
+  "globals": {
+      "describe": false,
+      "it": false
+  },
+  "rules": {
+    "node/no-deprecated-api": "off"
+  }
+}
