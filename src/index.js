@@ -22,7 +22,7 @@ const multiprocessMap = async (values, fn, max = os.cpus().length) => {
       file.end()
       const runner = file.path
       const cp = semver.satisfies(process.version, '>=10')
-        ? fork(runner, [], { stdio: ['ipc'] })
+        ? fork(runner, [], { stdio: ['pipe', 'pipe', 'ipc'] })
         : spawn('node', [runner], { stdio: ['pipe', 'pipe', 'ipc'] })
 
       await new Promise(resolve => {
@@ -46,9 +46,20 @@ const multiprocessMap = async (values, fn, max = os.cpus().length) => {
       cp.send([value, index, all])
     })
 
+    let stdout = ''
+    function onData (data) {
+      stdout += data
+    }
+
+    cp.stdout.on('data', onData)
+
     const retVal = JSON.parse(await new Promise(resolve => {
       cp.once('message', resolve)
     }))
+
+    cp.stdout.removeListener('data', onData)
+
+    if (stdout) process.stdout.write(stdout)
 
     pool.release(cp)
 
