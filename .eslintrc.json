@@ -3,7 +3,9 @@
   "plugins": ["standard"],
   "globals": {
       "describe": false,
-      "it": false
+      "it": false,
+      "before": false,
+      "after": false
   },
   "rules": {
     "node/no-deprecated-api": "off"

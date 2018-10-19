@@ -1,6 +1,7 @@
 'use strict'
 
 require('babel-polyfill')
+const assert = require('assert')
 const os = require('os')
 const { spawn, fork } = require('child_process')
 const semver = require('semver')
@@ -12,17 +13,27 @@ const multiprocessMap = async (values, fn, max = os.cpus().length) => {
     async create () {
       const file = createFile()
       file.write(
-        'process.on("message", function (value) {' +
-        '  Promise.resolve((' + fn + ')(value)).then(function (retVal) {' +
-        '    process.send(retVal) ' +
-        '  })' +
-        '})'
+        'process.on("message", function (value) {\n' +
+        '  Promise.resolve((' + fn + ')(value)).then(function (retVal) {\n' +
+        '    process.send(retVal)\n' +
+        '  })\n' +
+        '})\n' +
+        'process.send(null)'
       )
       file.end()
       const runner = file.path
       const cp = semver.satisfies(process.version, '>=10')
         ? fork(runner, [], { stdio: ['ipc'] })
         : spawn('node', [runner], { stdio: ['pipe', 'pipe', 'ipc'] })
+
+      assert.strictEqual(
+        await new Promise(resolve => {
+          cp.once('message', resolve)
+        }),
+        null
+      )
+
+      try { file.cleanupSync() } catch (_) {}
 
       return cp
     },
