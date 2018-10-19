@@ -13,7 +13,7 @@ const multiprocessMap = async (values, fn, max = os.cpus().length) => {
       const file = createFile()
       file.write(
         'process.on("message", function (value) {\n' +
-        '  Promise.resolve((' + fn + ')(value)).then(function (retVal) {\n' +
+        '  Promise.resolve((' + fn + ')(value[0], value[1], value[2])).then(function (retVal) {\n' +
         '    process.send(JSON.stringify(retVal))\n' +
         '  })\n' +
         '})\n' +
@@ -40,10 +40,10 @@ const multiprocessMap = async (values, fn, max = os.cpus().length) => {
     max
   })
 
-  const ret = await Promise.all(values.map(async value => {
+  const ret = await Promise.all(values.map(async (value, index, all) => {
     const cp = await pool.acquire()
     setImmediate(() => {
-      cp.send(value)
+      cp.send([value, index, all])
     })
 
     const retVal = JSON.parse(await new Promise(resolve => {
