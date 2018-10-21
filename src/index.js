@@ -37,7 +37,7 @@ const multiprocessMap = async (values, fn, max = os.cpus().length) => {
       )
       file.end()
       const runner = file.path
-      const cp = semver.satisfies(process.version, '>=10') || semver.satisfies(process.version, '^0.10.0')
+      const cp = semver.satisfies(process.version, '^0.10.0')
         ? fork(runner, [], { stdio: ['pipe', 'pipe', 'inherit', 'ipc'] })
         : spawn('node', [runner], { stdio: ['pipe', 'pipe', 'inherit', 'ipc'] })
 
