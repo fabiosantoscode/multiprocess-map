@@ -8,7 +8,7 @@ Mocha.describe('multiprocess-map', function () {
   this.timeout(10 * 1000)
   Mocha.it('orders stdout properly', function () {
     return map([3000, 2000, 1000], function (ms, i) {
-      return new Promise(function (resolve) {
+      return new (require('es6-promise'))(function (resolve) {
         setTimeout(function () {
           console.log(i)
           resolve()

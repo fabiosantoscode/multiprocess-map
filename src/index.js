@@ -2,18 +2,32 @@
 
 require('babel-polyfill')
 const os = require('os')
+const fs = require('fs')
+const path = require('path')
 const { spawn, fork } = require('child_process')
 const semver = require('semver')
-const createFile = require('create-temp-file')()
+const Promise = require('es6-promise')
 const genericPool = require('./vendor/generic-pool')
 
+const createFile = () => {
+  const filePath = path.join(__dirname, 'tmp', Math.random() + '.js')
+  const ret = fs.createWriteStream(filePath)
+  ret.path = filePath
+  ret.clean = () => {
+    fs.unlinkSync(filePath)
+  }
+  return ret
+}
+
 const multiprocessMap = async (values, fn, max = os.cpus().length) => {
+  const files = []
   const pool = genericPool.createPool({
     async create () {
       const file = createFile()
+      files.push(file)
       file.write(
         'process.on("message", function (value) {\n' +
-        '  Promise.resolve((' + fn + ')(value[0], value[1], value[2])).then(function (retVal) {\n' +
+        '  require("es6-promise").resolve((' + fn + ')(value[0], value[1], value[2])).then(function (retVal) {\n' +
         '     process.send(JSON.stringify({value: retVal}))\n' +
         '  }, function (error) {\n' +
         '     process.send(JSON.stringify({error: error}))\n' +
@@ -23,9 +37,9 @@ const multiprocessMap = async (values, fn, max = os.cpus().length) => {
       )
       file.end()
       const runner = file.path
-      const cp = semver.satisfies(process.version, '>=10')
-        ? fork(runner, [], { stdio: ['pipe', 'pipe', 'ipc'] })
-        : spawn('node', [runner], { stdio: ['pipe', 'pipe', 'ipc'] })
+      const cp = semver.satisfies(process.version, '>=10') || semver.satisfies(process.version, '^0.10.0')
+        ? fork(runner, [], { stdio: ['pipe', 'pipe', 'inherit', 'ipc'] })
+        : spawn('node', [runner], { stdio: ['pipe', 'pipe', 'inherit', 'ipc'] })
 
       await new Promise(resolve => {
         cp.once('message', resolve)
@@ -84,6 +98,8 @@ const multiprocessMap = async (values, fn, max = os.cpus().length) => {
 
   await pool.drain()
   pool.clear()
+
+  files.forEach(file => { file.clean() })
 
   return ret
 }
