@@ -15,7 +15,7 @@
     "url": "git+https://github.com/fabiosantoscode/multiprocess-map.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/fabiosantoscode/multiprocess-map/issues"
   },
