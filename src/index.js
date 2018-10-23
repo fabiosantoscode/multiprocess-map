@@ -1,6 +1,6 @@
 'use strict'
 
-require('babel-polyfill')
+if (!global._babelPolyfill) require('babel-polyfill')
 const os = require('os')
 const fs = require('fs')
 const path = require('path')
@@ -23,8 +23,10 @@ const createFile = (contents) => {
 
 const multiprocessMap = async (values, fn, { max = os.cpus().length, processStdout = x => x } = {}) => {
   const files = []
+  const istanbulVariableMatch = fn.toString().match(/\{(cov_.*?)[[.]/)
   const contents =
     'var circularJson = require("circular-json")\n' +
+    (istanbulVariableMatch ? 'var ' + istanbulVariableMatch[1] + ' = {s: [], f: []}\n' : '') +
     'process.on("message", function (msg) {\n' +
     '  msg = circularJson.parse(msg)\n' +
     '  require("es6-promise").resolve((' + fn + ')(msg[0], msg[1], msg[2])).then(function (retVal) {\n' +
