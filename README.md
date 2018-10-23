@@ -4,7 +4,9 @@
 
 Runs a map function on a set of values. The function will run on as many processors your machine has, or on `max` processes.
 
-## async map(values, fn[, max = os.cpus().length])
+## async map(values, fn[,{ max = os.cpus().length, processStdout:(cpStdout) => stdoutModified}])
 
 Returns a promise for the mapped array.
+
+Use `processStdout` option to process the stdout before multiprocess-map prints it to the console. Do this if the stdout is too verbose, for example.
 

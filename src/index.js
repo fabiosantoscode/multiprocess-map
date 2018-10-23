@@ -9,43 +9,38 @@ const semver = require('semver')
 const Promise = require('es6-promise')
 const genericPool = require('./vendor/generic-pool')
 
-const createFile = () => {
+const createFile = (contents) => {
   const filePath = path.join(__dirname, 'tmp', Math.random() + '.js')
-  const ret = fs.createWriteStream(filePath)
-  ret.path = filePath
-  ret.clean = () => {
-    fs.unlinkSync(filePath)
+  fs.writeFileSync(filePath, contents)
+  return {
+    path: filePath,
+    clean: () => {
+      fs.unlinkSync(filePath)
+    }
   }
-  return ret
 }
 
-const multiprocessMap = async (values, fn, max = os.cpus().length) => {
+const multiprocessMap = async (values, fn, { max = os.cpus().length, processStdout = x => x } = {}) => {
   const files = []
+  const contents =
+    'process.on("message", function (value) {\n' +
+    '  require("es6-promise").resolve((' + fn + ')(value[0], value[1], value[2])).then(function (retVal) {\n' +
+    '     process.send(JSON.stringify({value: retVal}))\n' +
+    '  }, function (error) {\n' +
+    '     process.send(JSON.stringify({error: error}))\n' +
+    '  })\n' +
+    '})\n' +
+    'process.send(null)'
+  const nodeProcessFile = createFile(contents)
   const pool = genericPool.createPool({
     async create () {
-      const file = createFile()
-      files.push(file)
-      file.write(
-        'process.on("message", function (value) {\n' +
-        '  require("es6-promise").resolve((' + fn + ')(value[0], value[1], value[2])).then(function (retVal) {\n' +
-        '     process.send(JSON.stringify({value: retVal}))\n' +
-        '  }, function (error) {\n' +
-        '     process.send(JSON.stringify({error: error}))\n' +
-        '  })\n' +
-        '})\n' +
-        'process.send(null)'
-      )
-      file.end()
-      const runner = file.path
       const cp = semver.satisfies(process.version, '^0.10.0')
-        ? fork(runner, [], { stdio: ['pipe', 'pipe', 'inherit', 'ipc'] })
-        : spawn('node', [runner], { stdio: ['pipe', 'pipe', 'inherit', 'ipc'] })
+        ? fork(nodeProcessFile.path, [], { stdio: ['pipe', 'pipe', 'inherit', 'ipc'] })
+        : spawn('node', [nodeProcessFile.path], { stdio: ['pipe', 'pipe', 'inherit', 'ipc'] })
 
       await new Promise(resolve => {
         cp.once('message', resolve)
       })
-
-      try { file.cleanupSync() } catch (_) {}
 
       return cp
     },
@@ -88,7 +83,7 @@ const multiprocessMap = async (values, fn, max = os.cpus().length) => {
     cp.stdout.removeListener('data', onData)
 
     enqueue(index, () => {
-      if (stdout) process.stdout.write(stdout)
+      if (stdout) process.stdout.write(processStdout(stdout))
     })
 
     pool.release(cp)
