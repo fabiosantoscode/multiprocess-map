@@ -22,7 +22,6 @@ const createFile = (contents) => {
 }
 
 const multiprocessMap = async (values, fn, { max = os.cpus().length, processStdout = x => x } = {}) => {
-  const files = []
   const istanbulVariableMatch = fn.toString().match(/\{(cov_.*?)[[.]/)
   const contents =
     'var circularJson = require("circular-json")\n' +
@@ -99,7 +98,7 @@ const multiprocessMap = async (values, fn, { max = os.cpus().length, processStdo
   await pool.drain()
   pool.clear()
 
-  files.forEach(file => { file.clean() })
+  setTimeout(() => { nodeProcessFile.clean() }, 1000)
 
   return ret
 }
