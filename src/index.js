@@ -26,7 +26,7 @@ const multiprocessMap = async (values, fn, { max = os.cpus().length, processStdo
   const istanbulVariableMatch = fn.toString().match(/\{(cov_.*?)[[.]/)
   const contents =
     'var circularJson = require("circular-json")\n' +
-    (istanbulVariableMatch ? 'var ' + istanbulVariableMatch[1] + ' = {s: [], f: []}\n' : '') +
+    'var ' + (istanbulVariableMatch ? istanbulVariableMatch[1] : '_cov$$') + ' = {s: [], f: [], b: [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]}\n' +
     'process.on("message", function (msg) {\n' +
     '  msg = circularJson.parse(msg)\n' +
     '  require("es6-promise").resolve((' + fn + ')(msg[0], msg[1], msg[2])).then(function (retVal) {\n' +
