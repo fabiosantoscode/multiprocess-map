@@ -7,7 +7,7 @@ const path = require('path')
 const { spawn, fork } = require('child_process')
 const semver = require('semver')
 const Promise = require('es6-promise')
-const circularJson = require('circular-json')
+const flatted = require('flatted')
 const genericPool = require('./vendor/generic-pool')
 
 const createFile = (contents) => {
@@ -24,14 +24,14 @@ const createFile = (contents) => {
 const multiprocessMap = async (values, fn, { max = os.cpus().length, processStdout = x => x } = {}) => {
   const istanbulVariableMatch = fn.toString().match(/\{(cov_.*?)[[.]/)
   const contents =
-    'var circularJson = require("circular-json")\n' +
+    'var flatted = require("flatted")\n' +
     'var ' + (istanbulVariableMatch ? istanbulVariableMatch[1] : '_cov$$') + ' = {s: [], f: [], b: [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]}\n' +
     'process.on("message", function (msg) {\n' +
-    '  msg = circularJson.parse(msg)\n' +
+    '  msg = flatted.parse(msg)\n' +
     '  require("es6-promise").resolve((' + fn + ')(msg[0], msg[1], msg[2])).then(function (retVal) {\n' +
-    '     process.send(circularJson.stringify({value: retVal}))\n' +
+    '     process.send(flatted.stringify({value: retVal}))\n' +
     '  }, function (error) {\n' +
-    '     process.send(circularJson.stringify({error: error}))\n' +
+    '     process.send(flatted.stringify({error: error}))\n' +
     '  })\n' +
     '})\n' +
     'process.send(null)'
@@ -68,7 +68,7 @@ const multiprocessMap = async (values, fn, { max = os.cpus().length, processStdo
   const ret = await Promise.all(values.map(async (value, index, all) => {
     const cp = await pool.acquire()
     setImmediate(() => {
-      cp.send(circularJson.stringify([value, index, all]))
+      cp.send(flatted.stringify([value, index, all]))
     })
 
     let stdout = ''
@@ -78,7 +78,7 @@ const multiprocessMap = async (values, fn, { max = os.cpus().length, processStdo
 
     cp.stdout.on('data', onData)
 
-    const { value: val, error } = circularJson.parse(await new Promise(resolve => {
+    const { value: val, error } = flatted.parse(await new Promise(resolve => {
       cp.once('message', resolve)
     }))
 
