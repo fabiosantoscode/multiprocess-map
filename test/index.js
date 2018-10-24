@@ -34,4 +34,18 @@ Mocha.describe('multiprocess-map', function () {
       }
     })
   })
+  Mocha.it('can give you stdout as it comes', function () {
+    this.timeout(10 * 1000)
+    return map([1], function () {
+      console.log('some stdout')
+
+      setTimeout(function () {
+        console.log('more stdout')
+      }, 1000)
+
+      return new Promise(function (resolve) {
+        setTimeout(resolve, 2000)
+      })
+    })
+  })
 })

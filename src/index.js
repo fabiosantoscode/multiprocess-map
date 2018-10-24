@@ -28,7 +28,7 @@ const multiprocessMap = async (values, fn, { max = os.cpus().length, processStdo
     'var ' + (istanbulVariableMatch ? istanbulVariableMatch[1] : '_cov$$') + ' = {s: [], f: [], b: [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]}\n' +
     'process.on("message", function (msg) {\n' +
     '  msg = flatted.parse(msg)\n' +
-    '  require("es6-promise").resolve((' + fn + ')(msg[0], msg[1], msg[2])).then(function (retVal) {\n' +
+    '  require("es6-promise").resolve().then(function () { return (' + fn + ')(msg[0], msg[1], msg[2]) }).then(function (retVal) {\n' +
     '     process.send(flatted.stringify({value: retVal}))\n' +
     '  }, function (error) {\n' +
     '     process.send(flatted.stringify({error: error}))\n' +
@@ -39,8 +39,8 @@ const multiprocessMap = async (values, fn, { max = os.cpus().length, processStdo
   const pool = genericPool.createPool({
     async create () {
       const cp = semver.satisfies(process.version, '^0.10.0')
-        ? fork(nodeProcessFile.path, [], { stdio: ['pipe', 'pipe', 'inherit', 'ipc'] })
-        : spawn('node', [nodeProcessFile.path], { stdio: ['pipe', 'pipe', 'inherit', 'ipc'] })
+        ? fork(nodeProcessFile.path, [], { stdio: ['pipe', 'pipe', 'inherit', 'ipc'], maxBuffer: 1 })
+        : spawn('node', [nodeProcessFile.path], { stdio: ['pipe', 'pipe', 'inherit', 'ipc'], maxBuffer: 1 })
 
       await new Promise(resolve => {
         cp.once('message', resolve)
@@ -57,6 +57,9 @@ const multiprocessMap = async (values, fn, { max = os.cpus().length, processStdo
 
   let called = 0
   const enqueued = []
+  const isLatest = idx => {
+    return idx === called
+  }
   const enqueue = (idx, fn) => {
     enqueued[idx] = fn
 
@@ -73,7 +76,11 @@ const multiprocessMap = async (values, fn, { max = os.cpus().length, processStdo
 
     let stdout = ''
     function onData (data) {
-      stdout += data
+      if (isLatest(index)) {
+        process.stdout.write(processStdout(data.toString()))
+      } else {
+        stdout += data
+      }
     }
 
     cp.stdout.on('data', onData)
