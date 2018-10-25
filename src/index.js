@@ -29,7 +29,7 @@ const multiprocessMap = async (values, fn, { max = os.cpus().length, processStdo
     'var ' + (istanbulVariableMatch ? istanbulVariableMatch[1] : '_cov$$') + ' = {s: [], f: [], b: [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]}\n' +
     'process.on("message", function (msg) {\n' +
     '  msg = circularJson.parse(msg)\n' +
-    '  userAsyncfunction(' + fn + ', msg[0], msg[1], msg[2]).then(function (retVal) {\n' +
+    '  userAsyncFunction(' + fn + ', msg[0], msg[1], msg[2]).then(function (retVal) {\n' +
     '     process.send(circularJson.stringify({value: retVal}))\n' +
     '  }, function (error) {\n' +
     '     process.send(circularJson.stringify({error: error}))\n' +
