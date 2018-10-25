@@ -4,8 +4,7 @@
   "description": "",
   "main": "lib/index.js",
   "scripts": {
-    "prepare": "npm run prepublish --silent",
-    "prepublish": "babel src -d lib",
+    "prepare": "babel src -d lib",
     "test": "istanbul cover -x '**/vendor/**' ./node_modules/.bin/_mocha && coveralls < coverage/lcov.info",
     "precommit": "npm run lint && npm run test",
     "lint": "eslint --fix src/**/*.js test/**/*.js"
