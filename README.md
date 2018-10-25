@@ -10,3 +10,13 @@ Returns a promise for the mapped array.
 
 Use `processStdout` option to process the stdout before multiprocess-map prints it to the console. Do this if the stdout is too verbose, for example.
 
+```javascript
+const map = require('multiprocess-map')  // Works with node 0.10 -> 10
+
+async function main() {
+  await map([1,2], (value, cb) => setTimeout(cb, 100))
+
+  await map([1, 2], async value => await foo(value))
+}
+```
+

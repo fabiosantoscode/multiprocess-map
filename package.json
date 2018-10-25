@@ -35,8 +35,9 @@
   },
   "dependencies": {
     "babel-polyfill": "^6.26.0",
-    "es6-promise": "^4.2.5",
     "circular-json": "^0.5.8",
-    "semver": "^5.6.0"
+    "es6-promise": "^4.2.5",
+    "semver": "^5.6.0",
+    "user-async-function": "^1.1.3"
   }
 }

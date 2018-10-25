@@ -25,10 +25,11 @@ const multiprocessMap = async (values, fn, { max = os.cpus().length, processStdo
   const istanbulVariableMatch = fn.toString().match(/\{(cov_.*?)[[.]/)
   const contents =
     'var circularJson = require("circular-json")\n' +
+    'var userAsyncFunction = require("user-async-function")\n' +
     'var ' + (istanbulVariableMatch ? istanbulVariableMatch[1] : '_cov$$') + ' = {s: [], f: [], b: [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]}\n' +
     'process.on("message", function (msg) {\n' +
     '  msg = circularJson.parse(msg)\n' +
-    '  require("es6-promise").resolve().then(function () { return (' + fn + ')(msg[0], msg[1], msg[2]) }).then(function (retVal) {\n' +
+    '  userAsyncfunction(' + fn + ', msg[0], msg[1], msg[2]).then(function (retVal) {\n' +
     '     process.send(circularJson.stringify({value: retVal}))\n' +
     '  }, function (error) {\n' +
     '     process.send(circularJson.stringify({error: error}))\n' +
@@ -40,7 +41,7 @@ const multiprocessMap = async (values, fn, { max = os.cpus().length, processStdo
     async create () {
       const cp = semver.satisfies(process.version, '^0.10.0')
         ? fork(nodeProcessFile.path, [], { stdio: ['pipe', 'pipe', 'inherit', 'ipc'], maxBuffer: 1 })
-        : spawn('node', [nodeProcessFile.path], { stdio: ['pipe', 'pipe', 'inherit', 'ipc'], maxBuffer: 1 })
+        : spawn(process.argv[0], [nodeProcessFile.path], { stdio: ['pipe', 'pipe', 'inherit', 'ipc'], maxBuffer: 1 })
 
       await new Promise(resolve => {
         cp.once('message', resolve)
