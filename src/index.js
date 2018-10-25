@@ -29,7 +29,7 @@ const multiprocessMap = async (values, fn, { max = os.cpus().length, processStdo
     'process.on("message", function (msg) {\n' +
     '  msg = circularJson.parse(msg)\n' +
     '  require("es6-promise").resolve().then(function () { return (' + fn + ')(msg[0], msg[1], msg[2]) }).then(function (retVal) {\n' +
-    '     process.send(flatted.stringify({value: retVal}))\n' +
+    '     process.send(circularJson.stringify({value: retVal}))\n' +
     '  }, function (error) {\n' +
     '     process.send(circularJson.stringify({error: error}))\n' +
     '  })\n' +
