@@ -90,7 +90,7 @@ const multiprocessMap = (values, fn, { max = os.cpus().length, processStdout = x
         }
       }
 
-      cp.stdout.on('data', onData)
+      if (cp.stdout) cp.stdout.on('data', onData)
 
       const { value: val, error } = circularJson.parse(await new Promise(resolve => {
         cp.once('message', resolve)
@@ -98,7 +98,7 @@ const multiprocessMap = (values, fn, { max = os.cpus().length, processStdout = x
 
       if (error) throw error
 
-      cp.stdout.removeListener('data', onData)
+      if (cp.stdout) cp.stdout.removeListener('data', onData)
 
       enqueue(index, () => {
         if (stdout) process.stdout.write(processStdout(stdout))
