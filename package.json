@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "prepare": "babel src -d lib",
-    "test": "istanbul cover -x '**/vendor/**' ./node_modules/.bin/_mocha && coveralls < coverage/lcov.info",
+    "test": "npm run prepare && istanbul cover -x '**/vendor/**' ./node_modules/.bin/_mocha && coveralls < coverage/lcov.info",
     "precommit": "npm run lint && npm run test",
     "lint": "eslint --fix src/**/*.js test/**/*.js"
   },
