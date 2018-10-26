@@ -4,8 +4,7 @@ if (!global._babelPolyfill) require('babel-polyfill')
 const os = require('os')
 const fs = require('fs')
 const path = require('path')
-const { spawn, fork } = require('child_process')
-const semver = require('semver')
+const { spawn } = require('child_process')
 const Promise = require('es6-promise')
 const circularJson = require('circular-json')
 const genericPool = require('./vendor/generic-pool')
@@ -45,9 +44,7 @@ const multiprocessMap = (values, fn, { max = os.cpus().length, processStdout = x
 
     const pool = genericPool.createPool({
       async create () {
-        const cp = semver.satisfies(process.version, '^0.10.0')
-          ? fork(filename, [], { stdio: ['pipe', 'pipe', 'inherit', 'ipc'], maxBuffer: 1 })
-          : spawn(process.argv[0], [filename], { stdio: ['pipe', 'pipe', 'inherit', 'ipc'], maxBuffer: 1 })
+        const cp = spawn(process.argv[0], [filename], { stdio: ['pipe', 'pipe', 'inherit', 'ipc'], maxBuffer: 1 })
 
         await new Promise(resolve => {
           cp.once('message', resolve)
