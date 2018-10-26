@@ -28,7 +28,10 @@ const multiprocessMap = (values, fn, { max = os.cpus().length, processStdout = x
       '})\n' +
       'process.send(null)'
     ws.write(contents)
-    ws.end()
+
+    setImmediate(() => { ws.end() })
+
+    await new Promise(resolve => { ws.on('close', resolve) })
 
     await new Promise(resolve => {
       function check () {
