@@ -29,6 +29,7 @@ Mocha.describe('multiprocess-map', function () {
       console.log(value)
       return value * 2
     }, {
+      max: 1,
       processStdout: function (stdout) {
         return stdout.replace(/\n$/gm, '') + '0\n'
       }
