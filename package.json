@@ -9,6 +9,9 @@
     "precommit": "npm run lint && npm run test",
     "lint": "eslint --fix src/**/*.js test/**/*.js"
   },
+  "files": [
+    "lib"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/fabiosantoscode/multiprocess-map.git"
