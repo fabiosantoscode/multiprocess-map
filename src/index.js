@@ -9,8 +9,8 @@ const { spawn, fork } = require('child_process')
 const semver = require('semver')
 const Promise = require('es6-promise')
 const circularJson = require('circular-json')
-const genericPool = require('./vendor/generic-pool')
 const withTempFile = require('with-temp-file')
+const Pool = require('./pool')
 
 const multiprocessMap = (values, fn, { max = os.cpus().length, processStdout = x => x } = {}) => {
   const istanbulVariableMatch = fn.toString().match(/\{(cov_.*?)[[.]/)
@@ -31,23 +31,26 @@ const multiprocessMap = (values, fn, { max = os.cpus().length, processStdout = x
   const filename = path.join(__dirname, 'tmp', hash + '.js')
   const tempFileExists = fs.existsSync(filename)
   return (tempFileExists ? fn => fn() : withTempFile)(async (ws) => {
-    ws.write(contents)
+    if (ws) {
+      ws.write(contents)
 
-    setImmediate(() => { ws.end() })
+      setImmediate(() => { ws.end() })
 
-    await new Promise(resolve => { ws.on('close', resolve) })
+      await new Promise(resolve => { ws.on('close', resolve) })
 
-    await new Promise(resolve => {
-      function check () {
-        if (fs.existsSync(filename)) {
-          return resolve()
+      await new Promise(resolve => {
+        function check () {
+          if (fs.existsSync(filename)) {
+            return resolve()
+          }
+          setTimeout(check, 300)
         }
-        setTimeout(check, 300)
-      }
-      check()
-    })
+        check()
+      })
+    }
 
-    const pool = genericPool.createPool({
+    const pool = new Pool({
+      max,
       async create () {
         const cp = semver.satisfies(process.version, '^0.10.0')
           ? fork(filename, [], { stdio: ['pipe', 'pipe', 'inherit', 'ipc'], maxBuffer: 1 })
@@ -62,8 +65,6 @@ const multiprocessMap = (values, fn, { max = os.cpus().length, processStdout = x
       destroy (cp) {
         cp.disconnect()
       }
-    }, {
-      max
     })
 
     let called = 0
@@ -118,7 +119,6 @@ const multiprocessMap = (values, fn, { max = os.cpus().length, processStdout = x
       return val
     }))
 
-    await pool.drain()
     pool.clear()
 
     return ret
