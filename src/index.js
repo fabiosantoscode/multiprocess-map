@@ -86,9 +86,9 @@ const multiprocessMap = (values, fn, { max = os.cpus().length, processStdout = x
       function onData (data) {
         if (isLatest(index)) {
           if (isFirstLatestCall && stdout) {
-            isFirstLatestCall = false
             process.stdout.write(processStdout(stdout))
           }
+          isFirstLatestCall = false
           process.stdout.write(processStdout(data.toString()))
         } else {
           stdout += data
