@@ -2,6 +2,7 @@
 
 if (!global._babelPolyfill) require('babel-polyfill')
 const os = require('os')
+const crypto = require('crypto')
 const fs = require('fs')
 const path = require('path')
 const { spawn, fork } = require('child_process')
@@ -12,21 +13,22 @@ const genericPool = require('./vendor/generic-pool')
 const withTempFile = require('with-temp-file')
 
 const multiprocessMap = (values, fn, { max = os.cpus().length, processStdout = x => x } = {}) => {
+  const istanbulVariableMatch = fn.toString().match(/\{(cov_.*?)[[.]/)
+  const contents =
+    'var circularJson = require("circular-json")\n' +
+    'var userAsyncFunction = require("user-async-function")\n' +
+    'var ' + (istanbulVariableMatch ? istanbulVariableMatch[1] : '_cov$$') + ' = {s: [], f: [], b: [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]}\n' +
+    'process.on("message", function (msg) {\n' +
+    '  msg = circularJson.parse(msg)\n' +
+    '  userAsyncFunction(' + fn + ', msg[0], msg[1], msg[2]).then(function (retVal) {\n' +
+    '     process.send(circularJson.stringify({value: retVal}))\n' +
+    '  }, function (error) {\n' +
+    '     process.send(circularJson.stringify({error: error}))\n' +
+    '  })\n' +
+    '})\n' +
+    'process.send(null)'
+  const hash = crypto.createHash('md4').update(contents).digest('hex')
   return withTempFile(async (ws, filename) => {
-    const istanbulVariableMatch = fn.toString().match(/\{(cov_.*?)[[.]/)
-    const contents =
-      'var circularJson = require("circular-json")\n' +
-      'var userAsyncFunction = require("user-async-function")\n' +
-      'var ' + (istanbulVariableMatch ? istanbulVariableMatch[1] : '_cov$$') + ' = {s: [], f: [], b: [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]}\n' +
-      'process.on("message", function (msg) {\n' +
-      '  msg = circularJson.parse(msg)\n' +
-      '  userAsyncFunction(' + fn + ', msg[0], msg[1], msg[2]).then(function (retVal) {\n' +
-      '     process.send(circularJson.stringify({value: retVal}))\n' +
-      '  }, function (error) {\n' +
-      '     process.send(circularJson.stringify({error: error}))\n' +
-      '  })\n' +
-      '})\n' +
-      'process.send(null)'
     ws.write(contents)
 
     setImmediate(() => { ws.end() })
@@ -118,7 +120,7 @@ const multiprocessMap = (values, fn, { max = os.cpus().length, processStdout = x
     pool.clear()
 
     return ret
-  }, path.join(__dirname, 'tmp', Math.random() + '.js'))
+  }, path.join(__dirname, 'tmp', hash + '.js'))
 }
 
 module.exports = multiprocessMap
