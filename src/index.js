@@ -28,7 +28,9 @@ const multiprocessMap = (values, fn, { max = os.cpus().length, processStdout = x
     '})\n' +
     'process.send(null)'
   const hash = crypto.createHash('md4').update(contents).digest('hex')
-  return withTempFile(async (ws, filename) => {
+  const filename = path.join(__dirname, 'tmp', hash + '.js')
+  const tempFileExists = fs.existsSync(filename)
+  return (tempFileExists ? fn => fn() : withTempFile)(async (ws) => {
     ws.write(contents)
 
     setImmediate(() => { ws.end() })
@@ -120,7 +122,7 @@ const multiprocessMap = (values, fn, { max = os.cpus().length, processStdout = x
     pool.clear()
 
     return ret
-  }, path.join(__dirname, 'tmp', hash + '.js'))
+  }, filename)
 }
 
 module.exports = multiprocessMap
