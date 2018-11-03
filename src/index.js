@@ -2,7 +2,6 @@
 
 if (!global._babelPolyfill) require('babel-polyfill')
 const os = require('os')
-const crypto = require('crypto')
 const fs = require('fs')
 const path = require('path')
 const { spawn, fork } = require('child_process')
@@ -10,7 +9,8 @@ const semver = require('semver')
 const Promise = require('es6-promise')
 const circularJson = require('circular-json')
 const withTempFile = require('with-temp-file')
-const Pool = require('./pool')
+const murmur = require('murmurhash')
+const Pool = require('compatible-pool')
 
 const multiprocessMap = (values, fn, { max = os.cpus().length, processStdout = x => x } = {}) => {
   const istanbulVariableMatch = fn.toString().match(/\{(cov_.*?)[[.]/)
@@ -27,7 +27,7 @@ const multiprocessMap = (values, fn, { max = os.cpus().length, processStdout = x
     '  })\n' +
     '})\n' +
     'process.send(null)'
-  const hash = crypto.createHash('md4').update(contents).digest('hex')
+  const hash = murmur.v3(contents)
   const filename = path.join(__dirname, 'tmp', hash + '.js')
   const tempFileExists = fs.existsSync(filename)
   return (tempFileExists ? fn => fn() : withTempFile)(async (ws) => {
