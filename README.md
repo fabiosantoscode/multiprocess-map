@@ -4,6 +4,8 @@
 
 Runs a map function on a set of values. The function will run on as many processors your machine has, or on `max` processes.
 
+Works in the browser, using web workers instead of node forks.
+
 ## async map(values, fn[,{ max = os.cpus().length, processStdout:(cpStdout) => stdoutModified}])
 
 Returns a promise for the mapped array.
@@ -14,8 +16,6 @@ Use `processStdout` option to process the stdout before multiprocess-map prints 
 const map = require('multiprocess-map')  // Works with node 0.10 -> 10
 
 async function main() {
-  await map([1,2], (value, cb) => setTimeout(cb, 100))
-
   await map([1, 2], async value => await foo(value))
 }
 ```
