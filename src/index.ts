@@ -1,6 +1,4 @@
 const os = require('os')
-const fs = require('fs')
-const path = require('path')
 const Pool = require('compatible-pool')
 const worker = require('parallel-worker')
 
@@ -17,28 +15,36 @@ const multiprocessMap = async (values: any[], fn: MapFn, {
 } = { max: os.cpus().length, processStdout: (x: string) => x }) => {
   const pool = new Pool({
     max,
-    create: () => worker.async(`
-      function processMap(onMessage, send) {
+    create: () => worker.async(
+      function processMap (onMessage, send) {
         onMessage(function (msg) {
-          Promise.resolve().then(function () {
-            return (${fn})(msg[0], msg[1], msg[2])
-          }).then(function (ret) {
-            send({ value: ret })
-          }, function (error) {
-            send({ error: error })
-          })
+          let value
+          try {
+            value = (fn)(msg[0], msg[1], msg[2])
+          } catch (e) {
+            send({ error: e })
+            return
+          }
+
+          if (value.then) {
+            value.then(function (ret) {
+              send({ val: ret })
+            }, function (error) {
+              send({ error: error })
+            })
+          } else {
+            send({ val: value })
+          }
         })
-      }
-    `),
+      }.toString().replace('fn', fn)
+    ),
     destroy (w: any) { w.stop() }
   })
 
   let called = 0
-  const enqueued: Array<() => any> = []
-  const isLatest = (idx: number) => {
-    return idx === called
-  }
-  const enqueue = (idx: number, fn: () => any) => {
+  const enqueued: Array<() => void> = []
+  const isLatest = (idx: number) => idx === called
+  const enqueue = (idx: number, fn: () => void) => {
     enqueued[idx] = fn
 
     while (enqueued[called]) {
@@ -46,15 +52,15 @@ const multiprocessMap = async (values: any[], fn: MapFn, {
       called++
     }
   }
-  const ret = await Promise.all(values.map(async (value: any, index: number, all: any[]): Promise<any> => {
+  const ret = await Promise.all(values.map(async (value: any, index: number, all: any): Promise<any> => {
     const cp = await pool.acquire()
-    setImmediate(() => {
+    setTimeout(() => {
       cp.send([value, index, all])
-    })
+    }, 100)
 
     let stdout = ''
     let isFirstLatestCall = true
-    function onStdout (data: string) {
+    const onStdout = (data: string) => {
       if (isLatest(index)) {
         if (isFirstLatestCall && stdout) {
           process.stdout.write(processStdout(stdout))
@@ -68,16 +74,16 @@ const multiprocessMap = async (values: any[], fn: MapFn, {
 
     cp.on('stdout', onStdout)
 
-    const { value: val, error } = await new Promise(resolve => {
+    const { val, error } = await new Promise(resolve => {
       cp.once('message', resolve)
     }) as any
 
-    if (error) throw error
+    if (error) { throw error }
 
     cp.removeListener('stdout', onStdout)
 
     enqueue(index, () => {
-      if (stdout) process.stdout.write(processStdout(stdout))
+      if (stdout) { process.stdout.write(processStdout(stdout)) }
     })
 
     pool.release(cp)

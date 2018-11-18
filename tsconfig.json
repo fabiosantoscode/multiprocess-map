@@ -1,10 +1,25 @@
 {
   "compilerOptions": {
-    "lib": ["es2018"],
-    "target": "es5",
+    "outDir": "dist",
     "module": "commonjs",
-    "outDir": "./lib",
-    "strict": true,
-    "esModuleInterop": true
-  }
+    "allowJs": false,
+    "alwaysStrict": true,
+    "declaration": true,
+    "importHelpers": true,
+    "moduleResolution": "classic",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": false,
+    "noImplicitThis": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "sourceMap": true,
+    "strictNullChecks": true,
+    "target": "esnext"
+  },
+  "include": [
+    "./src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
