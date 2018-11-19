@@ -6,8 +6,7 @@
   "scripts": {
     "prepare": "tsc -d --outDir lib",
     "test": "npm run prepare && istanbul cover ./node_modules/.bin/_mocha && coveralls < coverage/lcov.info",
-    "lint": "tslint --project tsconfig.json src/*",
-    "precommit": "npm run lint --silent && npm run test --silent"
+    "lint": "tslint --project tsconfig.json src/*"
   },
   "files": [
     "lib"
@@ -35,6 +34,11 @@
   },
   "dependencies": {
     "compatible-pool": "^1.0.0",
-    "parallel-worker": "^1.1.1"
+    "parallel-worker": "^1.2.1"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint --silent && npm run test --silent"
+    }
   }
 }
