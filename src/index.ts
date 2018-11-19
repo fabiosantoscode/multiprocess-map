@@ -14,12 +14,12 @@ const multiprocessMap = async (values: any[], fn: MapFn, {
   max: number,
   processStdout: ProcessStdoutFn
 } = { max: defaultMax, processStdout: (x: string) => x }) => {
-  const func = (onMessage, send) => {
+  const func = `(onMessage, send) => {
     onMessage(function (msg) {
       let value
       try {
         // tslint:disable:no-eval
-        value = eval(`(${msg[3]})`)(msg[0], msg[1], msg[2])
+        value = (${fn.toString()})(msg[0], msg[1], msg[2])
       } catch (error) {
         send({ error })
         return
@@ -35,7 +35,7 @@ const multiprocessMap = async (values: any[], fn: MapFn, {
         send({ value })
       }
     })
-  }
+  }`
   const pool = new Pool({
     max,
     create: () => worker.async(func),
@@ -57,7 +57,7 @@ const multiprocessMap = async (values: any[], fn: MapFn, {
   const ret = await Promise.all(values.map(async (value: any, index: number, all: any) =>
     new Promise((resolve, reject) => {
       pool.acquire().then(cp => {
-        cp.send([value, index, all, fn.toString()])
+        cp.send([value, index, all])
 
         let stdout = ''
         let isFirstLatestCall = true
