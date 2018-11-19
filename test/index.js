@@ -8,8 +8,8 @@ describe('multiprocess-map', function () {
     this.timeout(10 * 1000)
     return map([3000, 2000, 1000], function (ms, i) {
       return new (require('es6-promise'))(function (resolve) {
+        console.log(i)
         setTimeout(function () {
-          console.log(i)
           resolve(i)
         }, ms)
       })
@@ -34,6 +34,16 @@ describe('multiprocess-map', function () {
       processStdout: function (stdout) {
         return stdout.replace(/\n$/gm, '') + '0\n'
       }
+    })
+  })
+  it('propagates errors', function () {
+    return map([1,2,3], function (value) {
+      if (value === 2) {
+        throw new Error('e')
+      }
+    }).then(function (value) {
+      assert(false)
+    }, function (error) {
     })
   })
 })

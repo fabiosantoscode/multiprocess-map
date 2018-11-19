@@ -20,8 +20,8 @@ const multiprocessMap = async (values: any[], fn: MapFn, {
       try {
         // tslint:disable:no-eval
         value = eval(`(${msg[3]})`)(msg[0], msg[1], msg[2])
-      } catch (e) {
-        send({ error: e })
+      } catch (error) {
+        send({ error })
         return
       }
 
@@ -29,7 +29,7 @@ const multiprocessMap = async (values: any[], fn: MapFn, {
         value.then(function (value) {
           send({ value })
         }, function (error) {
-          send({ error: error })
+          send({ error })
         })
       } else {
         send({ value })
@@ -89,7 +89,7 @@ const multiprocessMap = async (values: any[], fn: MapFn, {
           pool.release(cp)
 
           resolve(value)
-        })
+        }).catch(reject)
       }).catch(reject)
     }
   )))
