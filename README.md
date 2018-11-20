@@ -16,7 +16,7 @@ Use `processStdout` option to process the stdout before multiprocess-map prints 
 const map = require('multiprocess-map')  // Works with node 0.10 -> 10
 
 async function main() {
-  await map([1, 2], async value => await foo(value))
+  await map([1, 2], async (value, i, all) => await foo(value))
 }
 ```
 
