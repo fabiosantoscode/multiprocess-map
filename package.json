@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "prepare": "tsc -d --outDir lib",
-    "test": "npm run prepare && mocha && coveralls < coverage/lcov.info",
+    "test": "npm run prepare && mocha",
     "lint": "tslint --project tsconfig.json src/*"
   },
   "files": [
@@ -22,7 +22,6 @@
   },
   "homepage": "https://github.com/fabiosantoscode/multiprocess-map#readme",
   "devDependencies": {
-    "coveralls": "^3.0.2",
     "es6-promise": "^4.2.5",
     "husky": "^1.1.2",
     "istanbul": "^1.1.0-alpha.1",
