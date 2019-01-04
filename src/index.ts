@@ -9,7 +9,7 @@ type MapFn = (item: any, index: number, all: any[]) => any
 const defaultMax = os.cpus().length
 const multiprocessMap = async (values: any[], fn: MapFn, {
   max = defaultMax,
-  processStdout = (x: string) => x
+  processStdout = (x: string): any => x
 }: {
   max: number,
   processStdout: ProcessStdoutFn
@@ -65,11 +65,14 @@ const multiprocessMap = async (values: any[], fn: MapFn, {
       let isFirstLatestCall = true
       const onStdout = (data: string) => {
         if (isLatest(index)) {
-          if (isFirstLatestCall && stdout) {
+          if (isFirstLatestCall && stdout && processStdout(stdout) != null) {
             process.stdout.write(processStdout(stdout))
           }
           isFirstLatestCall = false
-          process.stdout.write(processStdout(data))
+
+          if (processStdout(data) != null) {
+            process.stdout.write(processStdout(data))
+          }
         } else {
           stdout += data
         }
@@ -86,7 +89,7 @@ const multiprocessMap = async (values: any[], fn: MapFn, {
       cp.removeListener('stdout', onStdout)
 
       enqueue(index, () => {
-        if (stdout) { process.stdout.write(processStdout(stdout)) }
+        if (stdout && processStdout(stdout) != null) { process.stdout.write(processStdout(stdout)) }
       })
 
       pool.release(cp)
