@@ -59,7 +59,7 @@ const multiprocessMap = async (values: any[], fn: MapFn, {
   values = await Promise.all(values.map(
     async (val: any, index: number, all: any) => {
       const cp = await pool.acquire()
-      cp.send([val, index, all])
+      setImmediate(() => { cp.send([val, index, all]) })
 
       let stdout = ''
       let isFirstLatestCall = true

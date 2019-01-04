@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/fabiosantoscode/multiprocess-map.svg?branch=master)](https://travis-ci.org/fabiosantoscode/multiprocess-map) [![Coverage Status](https://coveralls.io/repos/github/fabiosantoscode/multiprocess-map/badge.svg?branch=master)](https://coveralls.io/github/fabiosantoscode/multiprocess-map?branch=master)
 
+*NOTE:* For node 0.10 up to 6.0 support use versions up to `1.4.3`. These versions don't support the browser like the most current one does.
+
 Runs a map function on a set of values. The function will run on as many processors your machine has, or on `max` processes.
 
 Works in the browser, using web workers instead of node forks.
