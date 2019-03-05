@@ -1,7 +1,6 @@
 const os = require('os')
 const Pool = require('compatible-pool')
 const { async: asyncWorker } = require('parallel-worker')
-const Promise = require('es6-promise')
 
 type ProcessStdoutFn = (s: string) => string
 type MapFn = (item: any, index: number, all: any[]) => any
@@ -82,7 +81,7 @@ const multiprocessMap = async (values: any[], fn: MapFn, {
 
       const { value, error } = await new Promise(resolve => {
         cp.once('message', resolve)
-      })
+      }) as any
 
       if (error) { throw error }
 

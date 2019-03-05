@@ -7,7 +7,7 @@ describe('multiprocess-map', function () {
   it('orders stdout properly', function () {
     this.timeout(10 * 1000)
     return map([3000, 2000, 1000], function (ms, i) {
-      return new (require('es6-promise'))(function (resolve) {
+      return new Promise(function (resolve) {
         console.log(i)
         setTimeout(function () {
           resolve(i)
